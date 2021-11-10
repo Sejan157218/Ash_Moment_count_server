@@ -1,4 +1,3 @@
-const { application, json } = require('express');
 const express = require('express');
 const app = express();
 const { MongoClient } = require('mongodb');
@@ -18,7 +17,23 @@ async function run() {
     try {
         await client.connect();
         const database = client.db("ash_moment_count");
- 
+        const usersCollection = database.collection("users");
+        
+        // post user
+        app.post('/users', async (req, res) => {
+            const body = req.body;
+            const result = await usersCollection.insertOne(body);
+            res.json(result)
+        })
+        // put user
+        app.put('/users', async (req, res) => {
+            const user = req.body;
+            const find = { email: user.email };
+            const options = { upsert: true };
+            const updateDoc = { $set: user };
+            const result = await usersCollection.updateOne(find, updateDoc, options);
+            res.json(result)
+        })
 
 
     } finally {
