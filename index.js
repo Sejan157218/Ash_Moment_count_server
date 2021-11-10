@@ -18,7 +18,7 @@ async function run() {
         await client.connect();
         const database = client.db("ash_moment_count");
         const usersCollection = database.collection("users");
-        
+
         // post user
         app.post('/users', async (req, res) => {
             const body = req.body;
@@ -33,6 +33,27 @@ async function run() {
             const updateDoc = { $set: user };
             const result = await usersCollection.updateOne(find, updateDoc, options);
             res.json(result)
+        })
+
+        // put user
+        app.put('/user/admin', async (req, res) => {
+            const user = req.body;
+            const find = { email: user.email };
+            const updateDoc = { $set: { role: 'admin' } };
+            const result = await usersCollection.updateOne(find, updateDoc);
+            res.json(result)
+        })
+
+        // admin check
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const find = { email: email };
+            const result = await usersCollection.findOne(find);
+            let isAdmin = false;
+            if (result?.role === "admin") {
+                isAdmin = true
+            }
+            res.json({ admin: isAdmin })
         })
 
 
