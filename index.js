@@ -17,7 +17,21 @@ async function run() {
     try {
         await client.connect();
         const database = client.db("ash_moment_count");
+        const watchCollection = database.collection("allwatch");
         const usersCollection = database.collection("users");
+
+
+        // post watch
+        app.post('/watchCollection', async (req, res) => {
+            const body = req.body;
+            const result = await watchCollection.insertOne(body);
+            res.json(result)
+        })
+        // get all watch
+        app.get('/watchCollection', async (req, res) => {
+            const result = await watchCollection.find({}).toArray();
+            res.send(result)
+        })
 
         // post user
         app.post('/users', async (req, res) => {
