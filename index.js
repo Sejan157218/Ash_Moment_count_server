@@ -21,6 +21,7 @@ async function run() {
         const watchCollection = database.collection("allwatch");
         const orderCollection = database.collection("allorder");
         const usersCollection = database.collection("users");
+        const reviewsCollection = database.collection("reviews");
 
 
         // post watch
@@ -43,14 +44,25 @@ async function run() {
             res.send(result)
         })
 
+        // get all order
+        app.get('/allorder', async (req, res) => {
+            const result = await orderCollection.find({}).toArray();
+            res.send(result)
+        })
 
         // get my order
         app.get('/myorder', async (req, res) => {
             const email = req.query.email;
             const find = { userEmail: email };
-            console.log(email,find);
             const result = await orderCollection.find(find).toArray();
-            console.log(result);
+            res.send(result)
+        })
+        // delete my order
+        app.delete('/myorder', async (req, res) => {
+            const email = req.query.email;
+            const id = req.query.id;
+            const find = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(find);
             res.send(result)
         })
 
@@ -99,6 +111,17 @@ async function run() {
             res.json({ admin: isAdmin })
         })
 
+        // post review
+        app.post('/allreviews', async (req, res) => {
+            const body = req.body;
+            const result = await reviewsCollection.insertOne(body);
+            res.json(result)
+        })
+        // post review
+        app.get('/allreviews', async (req, res) => {
+            const result = await reviewsCollection.find({}).toArray();
+            res.json(result)
+        })
 
     } finally {
         //   await client.close();  
