@@ -3,6 +3,7 @@ const app = express();
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 const cors = require('cors');
+const admin = require("firebase-admin");
 const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 9000
 
@@ -12,6 +13,30 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.57jms.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+// firebase auth service
+const serviceAccount = JSON.parse(process.env.FIREBASE_ADMINSDK);
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+
+// for verify JWT
+async function verifyToken(req, res, next) {
+    if (req.headers?.authorization?.startsWith('Bearer ')) {
+        const token = req.headers.authorization.split(' ')[1];
+        try {
+            const requestUser = await admin.auth().verifyIdToken(token);
+            req.requestUserEmail = requestUser.email;
+        }
+        catch {
+
+        }
+
+    }
+    next();
+}
 
 
 async function run() {
@@ -86,7 +111,7 @@ async function run() {
         })
 
         // get my order
-        app.get('/myorder', async (req, res) => {
+        app.get('/myorder',verifyToken, async (req, res) => {
             const email = req.query.email;
             const find = { userEmail: email };
             const result = await orderCollection.find(find).toArray();
@@ -118,12 +143,18 @@ async function run() {
         })
 
         // put user
-        app.put('/user/admin', async (req, res) => {
+        app.put('/user/admin', verifyToken, async (req, res) => {
             const user = req.body;
-            const find = { email: user.email };
-            const updateDoc = { $set: { role: 'admin' } };
-            const result = await usersCollection.updateOne(find, updateDoc);
-            res.json(result)
+            const requestUserEmail = req.requestUserEmail;
+            if (requestUserEmail) {
+                const requesterUserAccount = await usersCollection.findOne({ email: requestUserEmail })
+                if (requesterUserAccount.role === 'admin') {
+                    const filter = { email: user.email };
+                    const updateDoc = { $set: { role: 'admin' } };
+                    const result = await usersCollection.updateOne(filter, updateDoc);
+                    res.json(result)
+                }
+            }
         })
 
         // admin check
