@@ -3,6 +3,7 @@ const app = express();
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 const cors = require('cors');
+const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 9000
 
 
@@ -18,6 +19,7 @@ async function run() {
         await client.connect();
         const database = client.db("ash_moment_count");
         const watchCollection = database.collection("allwatch");
+        const orderCollection = database.collection("allorder");
         const usersCollection = database.collection("users");
 
 
@@ -31,6 +33,22 @@ async function run() {
         app.get('/watchCollection', async (req, res) => {
             const result = await watchCollection.find({}).toArray();
             res.send(result)
+        })
+
+        // get watch by id
+        app.get('/watchCollection/:id', async (req, res) => {
+            const id = req.params.id;
+            const find = { _id: ObjectId(id) };
+            const result = await watchCollection.findOne(find);
+            res.send(result)
+        })
+
+
+        // post order
+        app.post('/allorder', async (req, res) => {
+            const body = req.body;
+            const result = await orderCollection.insertOne(body);
+            res.json(result)
         })
 
         // post user
