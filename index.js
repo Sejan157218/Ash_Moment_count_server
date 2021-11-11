@@ -23,7 +23,6 @@ async function run() {
         const usersCollection = database.collection("users");
         const reviewsCollection = database.collection("reviews");
 
-
         // post watch
         app.post('/watchCollection', async (req, res) => {
             const body = req.body;
@@ -36,6 +35,15 @@ async function run() {
             res.send(result)
         })
 
+
+        // delete  watch
+        app.delete('/watchCollection/:id', async (req, res) => {
+            const id = req.params.id;
+            const find = { _id: ObjectId(id) };
+            const result = await watchCollection.deleteOne(find);
+            res.send(result)
+        })
+
         // get watch by id
         app.get('/watchCollection/:id', async (req, res) => {
             const id = req.params.id;
@@ -44,9 +52,36 @@ async function run() {
             res.send(result)
         })
 
+
+        // post all order
+        app.post('/allorder', async (req, res) => {
+            const body = req.body;
+            const result = await orderCollection.insertOne(body);
+            res.json(result)
+        })
+
         // get all order
         app.get('/allorder', async (req, res) => {
             const result = await orderCollection.find({}).toArray();
+            res.send(result)
+        })
+
+        // put satus
+        app.put('/allorder/:id', async (req, res) => {
+            const body = req.body;
+            const id = req.params.id;
+            const find = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = { $set: { productStatus: body?.updateSatus } };
+            const result = await orderCollection.updateOne(find, updateDoc, options);
+            res.json(result)
+        })
+
+        // delete order from admin
+        app.delete('/allorder/:id', async (req, res) => {
+            const id = req.params.id;
+            const find = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(find);
             res.send(result)
         })
 
@@ -59,20 +94,12 @@ async function run() {
         })
         // delete my order
         app.delete('/myorder', async (req, res) => {
-            const email = req.query.email;
             const id = req.query.id;
             const find = { _id: ObjectId(id) };
             const result = await orderCollection.deleteOne(find);
             res.send(result)
         })
 
-
-        // post order
-        app.post('/allorder', async (req, res) => {
-            const body = req.body;
-            const result = await orderCollection.insertOne(body);
-            res.json(result)
-        })
 
         // post user
         app.post('/users', async (req, res) => {
